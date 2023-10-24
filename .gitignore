@@ -7,3 +7,7 @@ dist/
 todo.txt
 
 *.spec
+
+platform_game/
+
+player_moves.csv
