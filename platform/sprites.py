@@ -98,6 +98,7 @@ class Spritesheet:
 
 class Player(pg.sprite.Sprite):
     def __init__(self, game):
+        self._layer = PLAYER_LAYER
         self.groups = game.all_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
         
@@ -212,6 +213,8 @@ class Player(pg.sprite.Sprite):
             
             self.last_update = now
             self.image = self.jump_frame
+        
+        self.mask = pg.mask.from_surface(self.image)
 
     def normal_update(self):
         keys = pg.key.get_pressed()
@@ -310,6 +313,7 @@ class Player(pg.sprite.Sprite):
 
 class Platform(pg.sprite.Sprite):
     def __init__(self, game, x, y, type=0):
+        self._layer = PLATFORM_LAYER
         self.groups = game.all_sprites, game.platforms
         pg.sprite.Sprite.__init__(self, self.groups)
 
@@ -341,6 +345,7 @@ class Platform(pg.sprite.Sprite):
 
 class Pow(pg.sprite.Sprite):
     def __init__(self, game, plat):
+        self._layer = POW_LAYER
         self.groups = game.all_sprites, game.powerups
         pg.sprite.Sprite.__init__(self, self.groups)
 
@@ -364,3 +369,91 @@ class Pow(pg.sprite.Sprite):
 
         if not self.game.platforms.has(self.plat):
             self.kill()
+
+
+class Mob(pg.sprite.Sprite):
+    def __init__(self, game):
+        self._layer = MOB_LAYER
+        self.groups = game.all_sprites, game.mobs
+        pg.sprite.Sprite.__init__(self, self.groups)
+
+        self.game = game
+
+        self.image_up = self.game.spritesheet.get_image(566, 510, 122, 139).convert()
+        self.image_up.set_colorkey(BLACK)
+
+        self.image_down = self.game.spritesheet.get_image(568, 1534, 122, 135).convert()
+        self.image_down.set_colorkey(BLACK)
+
+        self.image = self.image_down
+
+        self.rect = self.image.get_rect()
+
+        self.rect.centerx = choice([-100, WIDTH + 100])
+
+        self.vx = randrange(1, 4)
+
+        if self.rect.centerx > WIDTH:
+            self.vx *= -1
+        
+        self.rect.y = randrange(HEIGHT / 2)
+
+        self.vy = 0
+        self.dy = 0.5
+
+    def update(self):
+        self.rect.x += self.vx
+        self.vy += self.dy
+
+        if self.vy > 3 or self.vy < -3:
+            self.dy *= -1
+        
+        center = self.rect.center
+
+        if self.dy < 0:
+            self.image = self.image_up 
+        else:
+            self.image = self.image_down 
+        
+        self.rect = self.image.get_rect()
+
+        self.rect.center = center
+
+        self.rect.y += self.vy 
+
+        if self.rect.right < -100 or self.rect.left > WIDTH + 100:
+            self.kill()
+        
+        self.mask = pg.mask.from_surface(self.image)
+
+class Cloud(pg.sprite.Sprite):
+    def __init__(self, game):
+        self.layer_idx = choice(CLOUD_LAYER)
+        self._layer = self.layer_idx
+        self.groups = game.all_sprites, game.clouds
+        pg.sprite.Sprite.__init__(self, self.groups)
+
+        self.game = game
+
+        self.image = choice(self.game.cloud_images)
+
+
+        self.image.set_colorkey(BLACK)
+
+        self.rect = self.image.get_rect()
+        if self.layer_idx == 3:
+            
+            self.image = pg.transform.scale(self.image, (self.rect.width * 2, int(self.rect.height * 4 / 3)))
+        else:
+            scale = randrange(50, 100) / 100
+            self.image = pg.transform.scale(self.image, (self.rect.width * scale, int(self.rect.height * scale)))
+        self.rect = self.image.get_rect()
+        print('width', self.rect.width)
+        self.rect.x = randrange(WIDTH - self.rect.width)
+
+        self.rect.y = randrange(-500, -50)
+    
+    def update(self):
+        if self.rect.top > HEIGHT * 2:
+            self.kill()
+        

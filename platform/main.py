@@ -54,7 +54,7 @@ class Game:
     def load_pattern_configurations(self):
         self.patterns = [
                         [60, 64, 67],
-                        [57, 59],
+                        [52, 55, 59],
                         [67, 64, 60]
                         ]
 
@@ -85,7 +85,9 @@ class Game:
             except:
                 self.highscore = 0
         
-        
+        self.cloud_images = []
+        for i in range(1, 4):
+            self.cloud_images.append(pg.image.load(path.join(img_dir, f'cloud{i}.png')).convert())
 
         
         self.spritesheet = Spritesheet(path.join(img_dir, SPRITESHEET))
@@ -96,9 +98,11 @@ class Game:
 
     def new(self):
         self.score = 0
-        self.all_sprites = pg.sprite.Group()
+        self.all_sprites = pg.sprite.LayeredUpdates()
         self.platforms = pg.sprite.Group()
         self.powerups = pg.sprite.Group()
+        self.mobs = pg.sprite.Group()
+        self.clouds = pg.sprite.Group()
         self.player = Player(self)
         p1 = Platform(self, 0, HEIGHT - 40)
 
@@ -106,6 +110,7 @@ class Game:
             typ = random.choice([0, 1])
             p = Platform(self, *p_coors, typ)
 
+        self.mob_spawn_timer = 0
         
         pg.mixer.music.load(path.join(self.snd_dir, 'happytune.ogg'))
     
@@ -167,6 +172,19 @@ class Game:
         
         if self.player.pos.y < HEIGHT / 3:
             self.player.pos.y += max(abs(self.player.vel.y), 2)
+            
+            #number of clouds proportional to score
+            if randrange(100) < max(1, self.score / 100):
+                Cloud(self)
+            
+            for cloud in self.clouds:
+                if cloud.layer_idx == 0:
+                    speed = randrange(50, 200) / 100
+                    cloud.rect.y += max(abs(self.player.vel.y / speed), 2)
+                else:
+                    cloud.rect.y += max(abs(self.player.vel.y * randrange(4, 6) / 3), 2)
+            for mob in self.mobs:
+                mob.rect.y += max(abs(self.player.vel.y), 2)
 
             for plat in self.platforms:
                 plat.rect.y += max(abs(self.player.vel.y), 2)
@@ -192,10 +210,20 @@ class Game:
                              typ
                              )
 
-
-               
-
+        now = pg.time.get_ticks()
+        if self.score > 200:
+            if now - self.mob_spawn_timer > max(MOB_FREQ, random.choice([10000, 12000, 14000, 16000, 18000]) - self.score * 10):
+                self.mob_spawn_timer = now
+                Mob(self)
         
+        mob_hits = pg.sprite.spritecollide(self.player, self.mobs, False, pg.sprite.collide_mask)
+
+        if mob_hits:
+            self.playing = False
+
+
+
+
         if self.player.rect.top > HEIGHT:
             for sprite in self.all_sprites:
                 sprite.rect.y -= max(self.player.vel.y, 10)
@@ -203,14 +231,7 @@ class Game:
                     sprite.kill()
         if len(self.platforms) == 0:
             self.playing = False
-    # def piano_events(self):
-    #     if   self.midi_input.poll():
-    #         self.midi_events = self.midi_input.read(10)
-    #         for midi_event in self.midi_events:
-    #             timestamp, note_on, _, _ = midi_event[0]
-    #             if note_on == 64:
-    #                 self.player.jump()
-    #                 self.player.is_jumping = True
+    
     def events(self):
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -229,14 +250,11 @@ class Game:
                     self.player.jump_cut()
 
 
-
-
-
     def draw(self):
 
         self.screen.fill(BGCOLOR)
         self.all_sprites.draw(self.screen)
-        self.screen.blit(self.player.image, self.player.rect)
+        
         self.draw_text(str(self.score), 22, WHITE, WIDTH / 2, 15)
         
 
@@ -251,6 +269,9 @@ class Game:
             self.screen.fill(RED)
         self.draw_text(TITLE, 50, WHITE, WIDTH / 2, HEIGHT / 4) 
         self.draw_text(f'High Score: {str(self.highscore)}', 40, WHITE, WIDTH / 2, HEIGHT / 2) 
+        self.draw_text(f'space: jump', 25, WHITE, WIDTH / 2, int(4 * HEIGHT / 6) )
+        self.draw_text(f'left arrow:left', 25, WHITE, WIDTH / 2, int(4 * HEIGHT / 6) + 30 )
+        self.draw_text(f'right arrow: right', 25, WHITE, WIDTH / 2, int(4 * HEIGHT / 6) + 60)
         pg.display.flip()
         self.wait_for_key()
 

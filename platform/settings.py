@@ -10,32 +10,23 @@ PLAYER_FILE = 'player_moves.csv'
 
 MAX_TIME_BETWEEN_NOTES = 500
 
-#patterns
-# PATTERNS = [
-#     [60, 64, 67],
-#     [57],
-#     [67, 64, 60]
-#     ]
 
+PLAYER_LAYER = 2
+PLATFORM_LAYER = 1
+POW_LAYER = 1
+MOB_LAYER = 2
+CLOUD_LAYER = [0, 3]
 
-# TRANSPOSE_CONSTANT = -5
-# NOTE_DIVIDING_LEFT_AND_RIGHT_HANDS = 60 + TRANSPOSE_CONSTANT
-# PATTERNS = [[e + TRANSPOSE_CONSTANT for e in pattern] for pattern in PATTERNS]
-
-# print(PATTERNS)
-
-# AVAILABLE_NOTES = list(chain.from_iterable(PATTERNS))
-
-# PLAYER_ACC = 1
-
-JUMP_VEL = 2
+JUMP_VEL = 20
 
 PLAYER_FRICTION = -.12
-PLAYER_GRAV = .1
+PLAYER_GRAV = 1
 
 
-BOOST_POWER = 10
+BOOST_POWER = 40
 POW_SPAWN_PCT = 7
+
+MOB_FREQ = 5000
 
 
 
