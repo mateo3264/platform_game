@@ -359,7 +359,7 @@ class Pow(pg.sprite.Sprite):
         self.type = 'boost'
     
 
-        self.image = self.game.spritesheet.get_image(820, 1805, 71, 70).convert()
+        self.image = self.game.spritesheet.get_image(820, 1805, 71, 70)
         self.image.set_colorkey(BLACK)
 
         self.rect = self.image.get_rect()
@@ -373,6 +373,8 @@ class Pow(pg.sprite.Sprite):
 
         if not self.game.platforms.has(self.plat):
             self.kill()
+        
+        
 
 
 class Mob(pg.sprite.Sprite):

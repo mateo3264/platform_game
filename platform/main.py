@@ -217,23 +217,25 @@ class Game:
                     plat.kill()
                     self.score += 10
             
-            pow_hits = pg.sprite.spritecollide(self.player, self.powerups, True)
+        pow_hits = pg.sprite.spritecollide(self.player, self.powerups, True)
+        
+        for pow in pow_hits:
+            
+            if pow.type == 'boost':
+            
+                self.player.vel.y = -BOOST_POWER
+                self.player.is_jumping = False
+                self.player.landed = False
+                self.boost_sound.play()
 
-            for pow in pow_hits:
-                if pow.type == 'boost':
-                    self.player.vel.y = -BOOST_POWER
-                    self.player.is_jumping = False
-                    self.player.landed = False
-                    self.boost_sound.play()
-
-            while len(self.platforms) < 6:
-                width = random.randrange(60, 120)
-                typ = random.choice([0, 1])
-                p = Platform(self, 
-                             random.randrange(0, WIDTH - width), 
-                             random.randrange(-100, -30, 20),
-                             typ
-                             )
+        while len(self.platforms) < 6:
+            width = random.randrange(60, 120)
+            typ = random.choice([0, 1])
+            p = Platform(self, 
+                            random.randrange(0, WIDTH - width), 
+                            random.randrange(-100, -30, 20),
+                            typ
+                            )
 
         now = pg.time.get_ticks()
         if self.score > 200:
