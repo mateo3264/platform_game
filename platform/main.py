@@ -7,6 +7,8 @@ from os import path
 import sys
 import pygame.midi as midi
 import datetime 
+
+
 class Game:
     def __init__(self):
         
@@ -89,20 +91,31 @@ class Game:
         for i in range(1, 4):
             self.cloud_images.append(pg.image.load(path.join(img_dir, f'cloud{i}.png')).convert())
 
+        self.wind_image = pg.image.load(path.join(img_dir, 'wind.png')).convert()
+        self.wind_image = pg.transform.scale(self.wind_image, (128, 128))
+        self.wind_image = pg.transform.flip(self.wind_image, True, False)
+        self.wind_image.set_colorkey(WHITE)
         
         self.spritesheet = Spritesheet(path.join(img_dir, SPRITESHEET))
+
+        self.channel = pg.mixer.find_channel()
+        
 
         self.jump_sound = pg.mixer.Sound(path.join(self.snd_dir, 'Jump4.wav'))
         self.landed_sound = pg.mixer.Sound(path.join(self.snd_dir, 'landed.wav'))
         self.boost_sound = pg.mixer.Sound(path.join(self.snd_dir, 'boost2.wav'))
+        self.wind_sound = pg.mixer.Sound(path.join(self.snd_dir, 'wind.wav'))
+        self.wind_sound.set_volume(0.2)
 
     def new(self):
         self.score = 0
+        self.lives = 3
         self.all_sprites = pg.sprite.LayeredUpdates()
         self.platforms = pg.sprite.Group()
         self.powerups = pg.sprite.Group()
         self.mobs = pg.sprite.Group()
         self.clouds = pg.sprite.Group()
+        self.winds = pg.sprite.Group()
         self.player = Player(self)
         p1 = Platform(self, 0, HEIGHT - 40)
 
@@ -111,6 +124,10 @@ class Game:
             p = Platform(self, *p_coors, typ)
 
         self.mob_spawn_timer = 0
+
+        self.wind = 0
+        self.wind_spawn_timer = 0
+        self.wind_animation_timer = 0
         
         pg.mixer.music.load(path.join(self.snd_dir, 'happytune.ogg'))
     
@@ -183,6 +200,10 @@ class Game:
                     cloud.rect.y += max(abs(self.player.vel.y / speed), 2)
                 else:
                     cloud.rect.y += max(abs(self.player.vel.y * randrange(4, 6) / 3), 2)
+            
+            for wind in self.winds:
+                wind.rect.y += max(abs(self.player.vel.y), 2)
+
             for mob in self.mobs:
                 mob.rect.y += max(abs(self.player.vel.y), 2)
 
@@ -216,13 +237,36 @@ class Game:
                 self.mob_spawn_timer = now
                 Mob(self)
         
-        mob_hits = pg.sprite.spritecollide(self.player, self.mobs, False, pg.sprite.collide_mask)
+        mob_hits = pg.sprite.spritecollide(self.player, self.mobs, True, pg.sprite.collide_mask)
 
         if mob_hits:
-            self.playing = False
+            if self.lives > 0:
+                self.lives -= 1
+            if self.lives == 0:
+                self.playing = False
 
+        if self.score > 500:
+            if now - self.wind_spawn_timer > 5000:
+                self.wind_spawn_timer = now
+                wind_magnitude = choice([0, .1, .2, .3 ,self.score / 10000])
+                wind_direction = choice([-1, 1])
+                self.wind = wind_direction * wind_magnitude
 
-
+                if self.wind:
+                    n_winds = 0
+                    while len(self.winds) < 3:
+                        Wind(self, 50 + n_winds*50, wind_direction)
+                        n_winds += 1
+                    
+                    self.wind_sound.set_volume(wind_magnitude)
+                    self.wind_sound.play(1) 
+                    if wind_direction == -1:
+                        self.channel.set_volume(1.0, 0.0)
+                        self.channel.play(self.wind_sound)
+                    else:
+                        self.channel.set_volume(0.0, 1.0)
+                        self.channel.play(self.wind_sound)
+                        
 
         if self.player.rect.top > HEIGHT:
             for sprite in self.all_sprites:
@@ -256,6 +300,7 @@ class Game:
         self.all_sprites.draw(self.screen)
         
         self.draw_text(str(self.score), 22, WHITE, WIDTH / 2, 15)
+        self.draw_text(str(self.lives), 22, GREEN, WIDTH - 50, 15)
         
 
         pg.display.flip()

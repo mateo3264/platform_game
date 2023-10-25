@@ -297,7 +297,7 @@ class Player(pg.sprite.Sprite):
               
         self.acc.x = self.player_acc * self.direction
         
-        self.acc.x += self.vel.x * PLAYER_FRICTION 
+        self.acc.x += self.vel.x * PLAYER_FRICTION + self.game.wind
         self.vel += self.acc 
         self.pos += self.vel + self.player_acc * self.acc
         
@@ -455,5 +455,38 @@ class Cloud(pg.sprite.Sprite):
     
     def update(self):
         if self.rect.top > HEIGHT * 2:
+            self.kill()
+
+class Wind(pg.sprite.Sprite):
+    def __init__(self, game, x, vel_dir):
+        self._layer = 3 
+        self.groups = game.all_sprites, game.winds
+
+        pg.sprite.Sprite.__init__(self, self.groups)
+
+        self.game = game
+
+        self.image = self.game.wind_image
+
+        self.rect = self.image.get_rect()
+
+        if vel_dir == -1:
+            self.rect.centerx = WIDTH + x
+            self.image = pg.transform.flip(self.image, True, False)
+        elif vel_dir == 1:
+            self.rect.centerx = -x
+
+        
+        self.rect.y = HEIGHT / 3
+        
+        self.vx = vel_dir * 5
+    
+    def update(self):
+        self.rect.x += self.vx 
+
+        if self.rect.x  < -200 or self.rect.x > WIDTH + 200:
+            self.kill()
+        
+        if self.rect.y > HEIGHT:
             self.kill()
         
