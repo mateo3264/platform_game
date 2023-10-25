@@ -110,7 +110,7 @@ class Game:
     def new(self):
         self.score = 0
         self.lives = 3
-        self.pow_spawn_pct = 20
+        self.pow_spawn_pct = 25
         self.all_sprites = pg.sprite.LayeredUpdates()
         self.platforms = pg.sprite.Group()
         self.powerups = pg.sprite.Group()
@@ -206,7 +206,7 @@ class Game:
                     cloud.rect.y += max(abs(self.player.vel.y * randrange(4, 6) / 3), 2)
             
             for wind in self.winds:
-                wind.rect.y += max(abs(self.player.vel.y), 2)
+                wind.rect.y += max(abs(self.player.vel.y) / 2, 2)
 
             for mob in self.mobs:
                 mob.rect.y += max(abs(self.player.vel.y), 2)
