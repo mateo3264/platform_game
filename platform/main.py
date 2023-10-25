@@ -110,6 +110,7 @@ class Game:
     def new(self):
         self.score = 0
         self.lives = 3
+        self.pow_spawn_pct = 20
         self.all_sprites = pg.sprite.LayeredUpdates()
         self.platforms = pg.sprite.Group()
         self.powerups = pg.sprite.Group()
@@ -122,6 +123,8 @@ class Game:
         for p_coors in PLATFORM_LIST:
             typ = random.choice([0, 1])
             p = Platform(self, *p_coors, typ)
+
+
 
         self.mob_spawn_timer = 0
 
@@ -137,6 +140,7 @@ class Game:
 
         pg.mixer.music.play(loops=-1)
         self.playing = True 
+        
 
         while self.playing:
             self.clock.tick(FPS)
@@ -266,7 +270,10 @@ class Game:
                     else:
                         self.channel.set_volume(0.0, 1.0)
                         self.channel.play(self.wind_sound)
-                        
+
+        if self.score % 100 == 0:
+            if self.pow_spawn_pct > 7:
+                self.pow_spawn_pct -= 1                 
 
         if self.player.rect.top > HEIGHT:
             for sprite in self.all_sprites:
@@ -300,7 +307,7 @@ class Game:
         self.all_sprites.draw(self.screen)
         
         self.draw_text(str(self.score), 22, WHITE, WIDTH / 2, 15)
-        self.draw_text(str(self.lives), 22, GREEN, WIDTH - 50, 15)
+        self.draw_text(str(self.lives), 32, GREEN, WIDTH - 50, 15)
         
 
         pg.display.flip()

@@ -334,12 +334,16 @@ class Platform(pg.sprite.Sprite):
             self.image = images[0]
         else:
             self.image = images[1]
+        
+        self.rect = self.image.get_rect()
+        scale = max(.5, min(1000 / (self.game.score + 1), 2))
+        self.image = pg.transform.scale(self.image, (self.rect.width * scale, self.rect.height))
         self.rect = self.image.get_rect()
 
         self.rect.x = x
         self.rect.y = y
 
-        if randrange(100) < POW_SPAWN_PCT:
+        if randrange(100) < self.game.pow_spawn_pct:
             p = Pow(self.game, self)
 
 
@@ -477,7 +481,7 @@ class Wind(pg.sprite.Sprite):
             self.rect.centerx = -x
 
         
-        self.rect.y = HEIGHT / 3
+        self.rect.y = HEIGHT / 4
         
         self.vx = vel_dir * 5
     
