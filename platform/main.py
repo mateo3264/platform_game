@@ -7,6 +7,7 @@ from os import path
 import sys
 import pygame.midi as midi
 import datetime 
+from send_email import *
 
 
 class Game:
@@ -90,7 +91,8 @@ class Game:
         self.cloud_images = []
         for i in range(1, 4):
             self.cloud_images.append(pg.image.load(path.join(img_dir, f'cloud{i}.png')).convert())
-
+        # 28, 23
+        self.standing_frame = pg.image.load(path.join(img_dir, 'ghost1.png')).convert()
         self.wind_image = pg.image.load(path.join(img_dir, 'wind.png')).convert()
         self.wind_image = pg.transform.scale(self.wind_image, (128, 128))
         self.wind_image = pg.transform.flip(self.wind_image, True, False)
@@ -138,7 +140,8 @@ class Game:
 
     def run(self):
 
-        pg.mixer.music.play(loops=-1)
+        pg.mixer.music.play(loops=-10)
+        pg.mixer.music.set_volume(0.0)
         self.playing = True 
         
 
@@ -152,6 +155,7 @@ class Game:
 
     def update(self):
         self.all_sprites.update()
+        
         
 
         hits = pg.sprite.spritecollide(self.player, self.platforms, False)
@@ -356,7 +360,8 @@ class Game:
             f.write(self.player_moves)
             self.player_moves = ''
         self.wait_for_key()
-
+        if self.score > 1000:
+            send_mail(self.score)
         pg.mixer.music.fadeout(500)
 
     def wait_for_key(self):

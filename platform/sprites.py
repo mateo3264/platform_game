@@ -111,7 +111,8 @@ class Player(pg.sprite.Sprite):
         self.pattern_checker = PatternChecker(game)
 
         self.load_images()
-
+        print('self.standing_frames')
+        print(self.standing_frames)
         self.image = self.standing_frames[0]
         
 
@@ -143,13 +144,17 @@ class Player(pg.sprite.Sprite):
         self.last_update = 0
 
     def load_images(self):
-        self.standing_frames = [self.game.spritesheet.get_image(614, 1063, 120, 191),
-                                self.game.spritesheet.get_image(690, 406, 120, 201)
+        # self.standing_frames = [self.game.spritesheet.get_image(614, 1063, 120, 191),
+        #                         self.game.spritesheet.get_image(690, 406, 120, 201)
+        #                         ]
+        self.standing_frames = [self.game.standing_frame
                                 ]
-        
-
-        for frame in self.standing_frames:
-            frame.set_colorkey(BLACK)
+        image = pg.transform.scale(self.standing_frames[0], (120, 97))
+        image.set_colorkey(WHITE)
+        self.standing_frames = [image]
+        # self.standing_frames[0] = self.standing_frames[0]
+        # for frame in self.standing_frames:
+        #     frame.set_colorkey(BLACK)
         self.walk_frames_r = [self.game.spritesheet.get_image(678, 860, 120, 201),
                               self.game.spritesheet.get_image(692, 1458, 120, 207),
                                 ]

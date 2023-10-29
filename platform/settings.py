@@ -1,6 +1,6 @@
 from itertools import chain
 
-WIDTH = 360
+WIDTH = 800
 HEIGHT = 480
 FPS = 60
 FONT_NAME = 'arial'
@@ -46,6 +46,7 @@ YELLOW = (255, 255, 0)
 LIGHTBLUE = (0, 155, 155)
 BGCOLOR = LIGHTBLUE
 CAFE5_PURPLE = (255, 0, 255)
+DARK_GRAY = (58, 67, 82)
 
 
 TITLE = "CAFE 5"
