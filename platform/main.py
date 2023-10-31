@@ -8,6 +8,8 @@ import sys
 import pygame.midi as midi
 import datetime 
 from send_email import *
+from itertools import chain
+import numpy as np
 
 
 class Game:
@@ -69,8 +71,18 @@ class Game:
 
         self.available_notes = list(chain.from_iterable(self.patterns))
 
+    def load_audio_data(self):
+        self.pyau = pyaudio.PyAudio()
 
+        self.stream = self.pyau.open(
+            format=AUDIO_FORMAT,
+            channels=AUDIO_CHANNELS,
+            rate=AUDIO_RATE,
+            input=True,
+            frames_per_buffer=AUDIO_CHUNK_SIZE
+        )
     def load_data(self):
+        self.load_audio_data()
         if hasattr(sys, '_MEIPASS'):
             self.dir = sys._MEIPASS
         else:
@@ -161,7 +173,14 @@ class Game:
     def update(self):
         self.all_sprites.update()
         
-        
+        audio_data = self.stream.read(AUDIO_CHUNK_SIZE)
+        audio_array = np.frombuffer(audio_data, dtype=np.int16)
+
+        if max(audio_array) > 1000:
+            print('max audio', max(audio_array))
+            self.player.jump()
+
+
 
         hits = pg.sprite.spritecollide(self.player, self.platforms, False)
 
@@ -428,3 +447,6 @@ while g.running:
     g.show_go_screen()
 
 pg.quit()
+g.stream.stop_stream()
+g.stream.close()
+g.pyau.terminate()

@@ -1,4 +1,4 @@
-from itertools import chain
+import pyaudio
 
 WIDTH = 800
 HEIGHT = 480
@@ -50,3 +50,10 @@ DARK_GRAY = (58, 67, 82)
 
 
 TITLE = "CAFE 5"
+
+AUDIO_CHUNK_SIZE = 768
+AUDIO_FORMAT = pyaudio.paInt16
+AUDIO_CHANNELS = 1
+AUDIO_RATE = 44100
+
+
