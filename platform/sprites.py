@@ -2,6 +2,7 @@ from settings import *
 import pygame as pg
 import pygame.midi as midi
 from random import choice, randrange
+import math 
 
 vec = pg.math.Vector2
 
@@ -111,8 +112,8 @@ class Player(pg.sprite.Sprite):
         self.pattern_checker = PatternChecker(game)
 
         self.load_images()
-        print('self.standing_frames')
-        print(self.standing_frames)
+        # print('self.standing_frames')
+        # print(self.standing_frames)
         self.image = self.standing_frames[0]
         
 
@@ -128,6 +129,9 @@ class Player(pg.sprite.Sprite):
         self.player_acc = 1
 
         self.player_friction = -.12
+
+        
+        self.flying = False
 
         self.direction = 0
 
@@ -173,6 +177,12 @@ class Player(pg.sprite.Sprite):
         self.jump_frame = self.game.spritesheet.get_image(382, 763, 150, 181)
 
         self.jump_frame.set_colorkey(BLACK)
+    
+    def fly(self):
+        if self.game.fly_percent > 1:
+            self.vel.y = -10
+            self.game.fly_percent -= 1
+            self.flying = True
 
     def jump_cut(self):
         if self.is_jumping and self.vel.y < -3:
@@ -191,6 +201,7 @@ class Player(pg.sprite.Sprite):
             # Y velocity is proportional to X velocity
             self.game.jump_sound.play()
             self.vel.y = -JUMP_VEL - min(abs(self.vel.x), 4)
+            self.vel.y *= math.sqrt(self.game.player_grav)
             self.is_jumping = True
             self.landed = False
 
@@ -289,6 +300,9 @@ class Player(pg.sprite.Sprite):
 
         self.animate()
         
+        # if not self.flying:
+        #     if self.game.fly_percent < 100:
+        #         self.game.fly_percent += 1
 
         # print('NORMAL')
         # print(self.vel.x)
@@ -355,11 +369,11 @@ class Platform(pg.sprite.Sprite):
         self.rect.y = y
 
         if randrange(100) < self.game.pow_spawn_pct:
-            p = Pow(self.game, self)
+            p = Pow(self.game, self, choice(['boost', 'wings']))
 
 
 class Pow(pg.sprite.Sprite):
-    def __init__(self, game, plat):
+    def __init__(self, game, plat, tipo='boost'):
         self._layer = POW_LAYER
         self.groups = game.all_sprites, game.powerups
         pg.sprite.Sprite.__init__(self, self.groups)
@@ -367,10 +381,13 @@ class Pow(pg.sprite.Sprite):
         self.game = game
         self.plat = plat
 
-        self.type = 'boost'
+        self.type = tipo
     
+        if self.type == 'boost':
+            self.image = self.game.spritesheet.get_image(820, 1805, 71, 70)
+        else:
+            self.image = self.game.spritesheet.get_image(826, 1292, 71, 70)
 
-        self.image = self.game.spritesheet.get_image(820, 1805, 71, 70)
         self.image.set_colorkey(BLACK)
 
         self.rect = self.image.get_rect()

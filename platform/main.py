@@ -118,6 +118,7 @@ class Game:
         self.jump_sound = pg.mixer.Sound(path.join(self.snd_dir, 'Jump4.wav'))
         self.landed_sound = pg.mixer.Sound(path.join(self.snd_dir, 'landed.wav'))
         self.boost_sound = pg.mixer.Sound(path.join(self.snd_dir, 'boost2.wav'))
+        self.wings_sound = pg.mixer.Sound(path.join(self.snd_dir, 'wings.wav'))
         self.wind_sound = pg.mixer.Sound(path.join(self.snd_dir, 'wind.wav'))
         self.wind_sound.set_volume(0.2)
 
@@ -146,6 +147,8 @@ class Game:
         self.wind = 0
         self.wind_spawn_timer = 0
         self.wind_animation_timer = 0
+
+        self.fly_percent = 0
 
         self.bgcolor = [0, 155, 155]
 
@@ -177,8 +180,11 @@ class Game:
         audio_array = np.frombuffer(audio_data, dtype=np.int16)
 
         if max(audio_array) > 1000:
-            print('max audio', max(audio_array))
-            self.player.jump()
+            
+        
+            self.player.fly()
+        else:
+            self.player.flying = False
 
 
 
@@ -251,10 +257,15 @@ class Game:
             
             if pow.type == 'boost':
             
-                self.player.vel.y = -BOOST_POWER
+                self.player.vel.y = -BOOST_POWER * self.player_grav
                 self.player.is_jumping = False
                 self.player.landed = False
                 self.boost_sound.play()
+            
+            elif pow.type == 'wings':
+                if self.fly_percent <= 90:
+                    self.fly_percent += randrange(8, 16)
+                self.wings_sound.play()
 
         while len(self.platforms) < 6:
             width = random.randrange(60, 120)
@@ -322,9 +333,11 @@ class Game:
                             self.bgcolor[2] = 0
                         print('self.bgcolor')
                         print(self.bgcolor)
+                        print('self.player_grav')
+                        print(self.player_grav)
                         self.player_grav -= .1
-                        if self.player_grav < .1:
-                            self.player_grav = .1
+                        if self.player_grav < .5:
+                            self.player_grav = .5
                 if self.score - self.last_score > 100:
                     
                     self.last_score = self.score
@@ -335,7 +348,7 @@ class Game:
                 if self.player.player_friction > -.05:
                     self.player.player_friction = -.05
 
-        if self.player.rect.top > HEIGHT:
+        if self.player.rect.top > HEIGHT + 100:
             for sprite in self.all_sprites:
                 sprite.rect.y -= max(self.player.vel.y, 10)
                 if sprite.rect.top < 0:
@@ -360,6 +373,12 @@ class Game:
                 if event.key == pg.K_SPACE:
                     self.player.jump_cut()
 
+    def draw_flytime_bar(self, surf, x, y):
+        fill = (self.fly_percent / 100) * 200
+        fill_rect = pg.Rect(x, y, fill, 20)
+        whole_rect = pg.Rect(x, y, 200, 20)
+        pg.draw.rect(surf, RED, whole_rect)
+        pg.draw.rect(surf, GREEN, fill_rect)
 
     def draw(self):
 
@@ -369,7 +388,7 @@ class Game:
         self.draw_text(str(self.score), 22, WHITE, WIDTH / 2, 15)
         self.draw_text(str(self.lives), 32, GREEN, WIDTH - 50, 15)
         
-
+        self.draw_flytime_bar(self.screen, 20, 20)
         pg.display.flip()
 
     def show_start_screen(self):
