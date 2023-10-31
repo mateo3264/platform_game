@@ -50,7 +50,7 @@ class Game:
         self.patterns = [[e + value for e in pattern] for pattern in self.patterns]
         self.note_dividing_left_and_right_hands = self.patterns[0][0] 
 
-        print(self.patterns)
+        # print(self.patterns)
 
         self.available_notes = list(chain.from_iterable(self.patterns))
 
@@ -61,7 +61,7 @@ class Game:
                         [67, 64, 60]
                         ]
 
-        print(self.patterns)
+        # print(self.patterns)
         self.note_dividing_left_and_right_hands = self.patterns[0][0]
         
 
@@ -75,7 +75,7 @@ class Game:
             self.dir = sys._MEIPASS
         else:
             self.dir = path.dirname(__file__)
-        print('self.dir', self.dir)
+        # print('self.dir', self.dir)
 
         img_dir = path.join(self.dir, 'img')
         self.snd_dir = path.join(self.dir, 'snd')
@@ -113,6 +113,7 @@ class Game:
         self.score = 0
         self.lives = 3
         self.pow_spawn_pct = 25
+        self.last_score = 0
         self.all_sprites = pg.sprite.LayeredUpdates()
         self.platforms = pg.sprite.Group()
         self.powerups = pg.sprite.Group()
@@ -133,6 +134,10 @@ class Game:
         self.wind = 0
         self.wind_spawn_timer = 0
         self.wind_animation_timer = 0
+
+        self.bgcolor = [0, 155, 155]
+
+        self.player_grav = 1
         
         pg.mixer.music.load(path.join(self.snd_dir, 'happytune.ogg'))
     
@@ -166,14 +171,14 @@ class Game:
             for hit in hits:
                 if hit.rect.bottom > lowest.rect.bottom:
                     lowest = hit
-            if self.player.pos.x < lowest.rect.right + 10\
-                and self.player.pos.x > lowest.rect.left - 10:
+            if self.player.pos.x < lowest.rect.right + 20\
+                and self.player.pos.x > lowest.rect.left - 20:
                 if self.player.pos.y < lowest.rect.centery:
                     if self.player.vel.y > 0:
                         self.player.pos.y = lowest.rect.top
                         if self.player.is_jumping:
-                            print('lowest.rect.top')
-                            print(lowest.rect.top)
+                            # print('lowest.rect.top')
+                            # print(lowest.rect.top)
                             self.player_moves += f'{lowest.rect.midtop},'
                         self.player.vel.y = 0
                         self.player.is_jumping = False
@@ -217,7 +222,7 @@ class Game:
 
             for plat in self.platforms:
                 plat.rect.y += max(abs(self.player.vel.y), 2)
-                if plat.rect.top >= HEIGHT:
+                if plat.rect.top >= HEIGHT + 100:
                     plat.kill()
                     self.score += 10
             
@@ -252,6 +257,8 @@ class Game:
         if mob_hits:
             if self.lives > 0:
                 self.lives -= 1
+                self.player.jump(False)
+                
             if self.lives == 0:
                 self.playing = False
 
@@ -276,10 +283,38 @@ class Game:
                     else:
                         self.channel.set_volume(0.0, 1.0)
                         self.channel.play(self.wind_sound)
-
+        
+        #todo: fix. it will substract until pow_spawn_pct is = 7
         if self.score % 100 == 0:
-            if self.pow_spawn_pct > 7:
-                self.pow_spawn_pct -= 1                 
+            if self.score - self.last_score > 100:
+                
+                if self.pow_spawn_pct > 7:
+                    self.pow_spawn_pct -= 1 
+            if self.score > 300:
+                if self.score > 500:
+                    if self.score - self.last_score > 100:
+                        self.bgcolor[1] -= 15
+                        self.bgcolor[2] -= 15
+
+                        if self.bgcolor[1] < 0:
+                            self.bgcolor[1] = 0
+                        
+                        if self.bgcolor[2] < 0:
+                            self.bgcolor[2] = 0
+                        print('self.bgcolor')
+                        print(self.bgcolor)
+                        self.player_grav -= .1
+                        if self.player_grav < .1:
+                            self.player_grav = .1
+                if self.score - self.last_score > 100:
+                    
+                    self.last_score = self.score
+                    self.player.player_friction += .005
+                    print('self.player.player_friction')
+                    print(self.player.player_friction)
+                
+                if self.player.player_friction > -.05:
+                    self.player.player_friction = -.05
 
         if self.player.rect.top > HEIGHT:
             for sprite in self.all_sprites:
@@ -309,7 +344,7 @@ class Game:
 
     def draw(self):
 
-        self.screen.fill(BGCOLOR)
+        self.screen.fill(self.bgcolor)
         self.all_sprites.draw(self.screen)
         
         self.draw_text(str(self.score), 22, WHITE, WIDTH / 2, 15)

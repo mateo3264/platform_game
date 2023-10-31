@@ -127,6 +127,8 @@ class Player(pg.sprite.Sprite):
 
         self.player_acc = 1
 
+        self.player_friction = -.12
+
         self.direction = 0
 
         self.curr_pattern = []
@@ -176,10 +178,14 @@ class Player(pg.sprite.Sprite):
         if self.is_jumping and self.vel.y < -3:
             self.vel.y = -3
 
-    def jump(self):
-        self.rect.y += 2
-        hits = pg.sprite.spritecollide(self, self.game.platforms, False)
-        self.rect.y -= 2
+    def jump(self, platform=True):
+        if platform:
+            self.rect.y += 2
+            hits = pg.sprite.spritecollide(self, self.game.platforms, False)
+            self.rect.y -= 2
+        else:
+            hits = True
+            self.is_jumping = False
 
         if hits and not self.is_jumping:
             # Y velocity is proportional to X velocity
@@ -292,7 +298,7 @@ class Player(pg.sprite.Sprite):
             self.walking = False
         #reduces velocity by reducing factor multiplying acceleration
         self.direction *= .9 
-        self.acc  = vec(0, PLAYER_GRAV)
+        self.acc  = vec(0, self.game.player_grav)
         
         
         if self.game.playing_with_piano:
@@ -302,7 +308,7 @@ class Player(pg.sprite.Sprite):
               
         self.acc.x = self.player_acc * self.direction
         
-        self.acc.x += self.vel.x * PLAYER_FRICTION + self.game.wind
+        self.acc.x += self.vel.x * self.player_friction + self.game.wind
         self.vel += self.acc 
         self.pos += self.vel + self.player_acc * self.acc
         
@@ -459,7 +465,7 @@ class Cloud(pg.sprite.Sprite):
             scale = randrange(50, 100) / 100
             self.image = pg.transform.scale(self.image, (self.rect.width * scale, int(self.rect.height * scale)))
         self.rect = self.image.get_rect()
-        print('width', self.rect.width)
+        
         self.rect.x = randrange(WIDTH - self.rect.width)
 
         self.rect.y = randrange(-500, -50)
