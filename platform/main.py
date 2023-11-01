@@ -59,7 +59,7 @@ class Game:
     def load_pattern_configurations(self):
         self.patterns = [
                         [60, 64, 67],
-                        [52, 55, 59],
+                        [52],
                         [67, 64, 60]
                         ]
 
@@ -348,7 +348,7 @@ class Game:
                 if self.player.player_friction > -.05:
                     self.player.player_friction = -.05
 
-        if self.player.rect.top > HEIGHT + 100:
+        if self.player.rect.top > HEIGHT + 200:
             for sprite in self.all_sprites:
                 sprite.rect.y -= max(self.player.vel.y, 10)
                 if sprite.rect.top < 0:
