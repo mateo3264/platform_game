@@ -18,7 +18,7 @@ class PatternChecker:
         self.user_pattern = [[], []]
         self.active_moves = [False, False, False]
 
-        self.total_time_of_running_pattern = 0
+        self.total_time_of_running_pattern = 1
 
 
     def reset_active_moves(self):
@@ -46,7 +46,7 @@ class PatternChecker:
                                     self.user_pattern[0].append([note_on, timestamp])
                                 else:
                                     self.user_pattern[0] = []
-                                    self.total_time_of_running_pattern = 0
+                                    self.total_time_of_running_pattern = 1
                             else:
                                 self.user_pattern[0].append([note_on, timestamp])
                         else:
@@ -150,17 +150,17 @@ class Player(pg.sprite.Sprite):
         self.last_update = 0
 
     def load_images(self):
-        # self.standing_frames = [self.game.spritesheet.get_image(614, 1063, 120, 191),
-        #                         self.game.spritesheet.get_image(690, 406, 120, 201)
-        #                         ]
-        self.standing_frames = [self.game.standing_frame
+        self.standing_frames = [self.game.spritesheet.get_image(614, 1063, 120, 191),
+                                self.game.spritesheet.get_image(690, 406, 120, 201)
                                 ]
-        image = pg.transform.scale(self.standing_frames[0], (120, 97))
-        image.set_colorkey(WHITE)
-        self.standing_frames = [image]
+        # self.standing_frames = [self.game.standing_frame
+        #                         ]
+        # image = pg.transform.scale(self.standing_frames[0], (120, 97))
+        #image.set_colorkey(BLACK)
+        # self.standing_frames = [image]
         # self.standing_frames[0] = self.standing_frames[0]
-        # for frame in self.standing_frames:
-        #     frame.set_colorkey(BLACK)
+        for frame in self.standing_frames:
+            frame.set_colorkey(BLACK)
         self.walk_frames_r = [self.game.spritesheet.get_image(678, 860, 120, 201),
                               self.game.spritesheet.get_image(692, 1458, 120, 207),
                                 ]
@@ -333,7 +333,8 @@ class Player(pg.sprite.Sprite):
 
         self.rect.midbottom = self.pos
 
-        self.pattern_checker.total_time_of_running_pattern = 0
+        self.pattern_checker.total_time_of_running_pattern = 1
+        
 
 
 class Platform(pg.sprite.Sprite):

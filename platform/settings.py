@@ -28,7 +28,19 @@ POW_SPAWN_PCT = 7
 
 MOB_FREQ = 5000
 
+easy_configs = {
+    'wings_range':(20, 25),
+    'max_pct_pows':30,
+    'min_pct_pows':10,
+    
+}
 
+hard_configs = {
+    'wings_range':(5, 15),
+    'max_pct_pows':20,
+    'min_pct_pows':5,
+
+}
 
 PLATFORM_LIST = [
     (0, HEIGHT - 60),

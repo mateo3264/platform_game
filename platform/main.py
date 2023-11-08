@@ -13,12 +13,13 @@ import numpy as np
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, configs):
         
         pg.init()
         pg.mixer.init()
         midi.init()
 
+        self.configs = configs
 
         #load piano if connected else pc keyboard
         #TODO: quitar hardcoded 1
@@ -58,9 +59,9 @@ class Game:
 
     def load_pattern_configurations(self):
         self.patterns = [
-                        [60, 64, 67],
+                        [67],
                         [52],
-                        [67, 64, 60]
+                        [60]
                         ]
 
         # print(self.patterns)
@@ -125,7 +126,7 @@ class Game:
     def new(self):
         self.score = 0
         self.lives = 3
-        self.pow_spawn_pct = 25
+        self.pow_spawn_pct = self.configs['max_pct_pows']
         self.last_score = 0
         self.all_sprites = pg.sprite.LayeredUpdates()
         self.platforms = pg.sprite.Group()
@@ -148,7 +149,7 @@ class Game:
         self.wind_spawn_timer = 0
         self.wind_animation_timer = 0
 
-        self.fly_percent = 0
+        self.fly_percent = 100
 
         self.bgcolor = [0, 155, 155]
 
@@ -179,7 +180,7 @@ class Game:
         audio_data = self.stream.read(AUDIO_CHUNK_SIZE)
         audio_array = np.frombuffer(audio_data, dtype=np.int16)
 
-        if max(audio_array) > 1000:
+        if max(audio_array) > 10000:
             
         
             self.player.fly()
@@ -257,14 +258,14 @@ class Game:
             
             if pow.type == 'boost':
             
-                self.player.vel.y = -BOOST_POWER * self.player_grav
+                self.player.vel.y = -BOOST_POWER * math.sqrt(self.player_grav)
                 self.player.is_jumping = False
                 self.player.landed = False
                 self.boost_sound.play()
             
             elif pow.type == 'wings':
                 if self.fly_percent <= 90:
-                    self.fly_percent += randrange(8, 16)
+                    self.fly_percent += randrange(self.configs['wings_range'][0], self.configs['wings_range'][1])
                 self.wings_sound.play()
 
         while len(self.platforms) < 6:
@@ -318,7 +319,7 @@ class Game:
         if self.score % 100 == 0:
             if self.score - self.last_score > 100:
                 
-                if self.pow_spawn_pct > 7:
+                if self.pow_spawn_pct > self.configs['min_pct_pows']:
                     self.pow_spawn_pct -= 1 
             if self.score > 300:
                 if self.score > 500:
@@ -403,6 +404,7 @@ class Game:
         self.draw_text(f'space: jump', 25, WHITE, WIDTH / 2, int(4 * HEIGHT / 6) )
         self.draw_text(f'left arrow:left', 25, WHITE, WIDTH / 2, int(4 * HEIGHT / 6) + 30 )
         self.draw_text(f'right arrow: right', 25, WHITE, WIDTH / 2, int(4 * HEIGHT / 6) + 60)
+        #self.draw_text(f'E: easy; H: hard', 25, WHITE, WIDTH / 2, int(4 * HEIGHT / 6) + 80)
         pg.display.flip()
         self.wait_for_key()
 
@@ -433,8 +435,11 @@ class Game:
             f.write(self.player_moves)
             self.player_moves = ''
         self.wait_for_key()
-        if self.score > 1000:
-            send_mail(self.score)
+        try:
+            if self.score > 2000:
+                send_mail(self.score)
+        except:
+            print('Seems that internet connection is not working!')
         pg.mixer.music.fadeout(500)
 
     def wait_for_key(self):
@@ -458,7 +463,7 @@ class Game:
         self.screen.blit(text_surface, text_rect)
 
 
-g = Game()
+g = Game(easy_configs)
 g.show_start_screen()
 
 while g.running:
