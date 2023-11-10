@@ -126,6 +126,7 @@ class Game:
     def new(self):
         self.score = 0
         self.lives = 3
+        self.remaining_platforms = 4
         self.pow_spawn_pct = self.configs['max_pct_pows']
         self.last_score = 0
         self.all_sprites = pg.sprite.LayeredUpdates()
@@ -268,7 +269,7 @@ class Game:
                     self.fly_percent += randrange(self.configs['wings_range'][0], self.configs['wings_range'][1])
                 self.wings_sound.play()
 
-        while len(self.platforms) < 6:
+        while len(self.platforms) < 3:
             width = random.randrange(60, 120)
             typ = random.choice([0, 1])
             p = Platform(self, 
@@ -368,7 +369,23 @@ class Game:
                     self.player.jump()
                     self.player_moves += '^\n'
                     self.player.is_jumping = True
-                    
+            if event.type == pg.KEYUP:
+                if event.key == pg.K_a:
+                    if self.remaining_platforms > 0:
+                        Platform(self, 20, HEIGHT // 2, 0) 
+                        self.remaining_platforms -= 1     
+                if event.key == pg.K_w:
+                    if self.remaining_platforms > 0:
+                        Platform(self, WIDTH // 2 - 50, 20, 0)      
+                        self.remaining_platforms -= 1     
+                if event.key == pg.K_d:
+                    if self.remaining_platforms > 0:
+                        Platform(self, WIDTH - 120, HEIGHT // 2, 0)      
+                        self.remaining_platforms -= 1     
+                if event.key == pg.K_s:
+                    if self.remaining_platforms > 0:
+                        Platform(self, WIDTH - 120, HEIGHT - 20, 0)      
+                        self.remaining_platforms -= 1     
                     
             if event.type == pg.KEYUP:
                 if event.key == pg.K_SPACE:
@@ -388,8 +405,23 @@ class Game:
         
         self.draw_text(str(self.score), 22, WHITE, WIDTH / 2, 15)
         self.draw_text(str(self.lives), 32, GREEN, WIDTH - 50, 15)
+        self.draw_text(str(self.remaining_platforms), 32, BLACK, WIDTH - 50, 55)
         
         self.draw_flytime_bar(self.screen, 20, 20)
+        plat = self.spritesheet.get_image(218, 1456, 201, 100)
+        plat.set_colorkey(BLACK)
+        rect = plat.get_rect()
+        plat = pg.transform.scale(plat, (rect.width // 4, rect.height // 4))
+        rect.top = 50
+        rect.right = WIDTH - 50
+        self.screen.blit(plat, rect.center)
+
+        plat = self.spritesheet.get_image(812, 554, 54, 49)
+        plat.set_colorkey(BLACK)
+        rect = plat.get_rect()
+        plat = pg.transform.scale(plat, (rect.width, rect.height))
+        rect.center = WIDTH - 100, 25
+        self.screen.blit(plat, rect.center)
         pg.display.flip()
 
     def show_start_screen(self):
