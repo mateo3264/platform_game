@@ -86,6 +86,80 @@ class PatternChecker:
         return self.active_moves
 
 
+
+class PatternChecker2:
+    def __init__(self, pattern, transposition_interval=0):
+        
+        self.pattern = pattern
+        self.pattern = [note + transposition_interval for note in self.pattern]
+        
+        self.curr_idx = len(self.pattern) - 1
+
+        self.last_timestamp = 0
+
+        self.interval_between_notes = 500
+
+    def nombre(self, player, midi2events, movement_type='x'):
+                
+                for midi_event in midi2events:
+                    note = midi_event.data1
+                    volume = midi_event.data2
+                    timestamp = midi_event.timestamp
+                    
+                    if volume != 0:
+                        if timestamp - self.last_timestamp < self.interval_between_notes:
+                            if note == self.pattern[(self.curr_idx + 1) % len(self.pattern)]:
+                                self.last_timestamp = timestamp
+                                
+                                
+                                if movement_type == 'x':
+                                    #rect.centerx += volume // 2
+                                    self.curr_idx = (self.curr_idx + 1) % len(self.pattern)
+                                    player.walking = True
+                                    player.direction = 1
+                                    player.player_acc = 1
+                                    player.player_acc = volume ** (9/8) / 80 * min(2 * player.player_acc, 1)
+
+                                elif movement_type == 'jump':
+                                    print('JUMP')
+                                    player.jump()
+                                    #rect.centery += volume // 2
+                            elif note == self.pattern[(self.curr_idx - 1) % len(self.pattern)]:
+                                self.last_timestamp = timestamp
+                                #print(note, volume, timestamp)
+                                if movement_type == 'x':
+                                    self.curr_idx = (self.curr_idx - 1) % len(self.pattern)
+                                    player.walking = True
+                                    player.direction = -1
+                                    player.player_acc = 1
+                                    player.player_acc = volume ** (9/8) / 80 * min(2 * player.player_acc, 1)
+                                # elif movement_type == 'y':
+                                #     rect.centery -= volume // 2
+
+                        
+                        else:
+                            if note == self.pattern[0]:
+                                if movement_type == 'jump':
+                                    print('JUMP')
+                                    player.jump() 
+                                else:   
+                                    self.last_timestamp = timestamp
+                                    self.curr_idx = (self.curr_idx + 1) % len(self.pattern)
+                                    player.walking = True
+                                    player.direction = 1
+                                    player.player_acc = 1
+                                    player.player_acc = volume ** (9/8) / 80 * min(2 * player.player_acc, 1)
+                            elif note == self.pattern[-1]:
+                                self.last_timestamp = timestamp
+                                self.curr_idx = (self.curr_idx - 1) % len(self.pattern)
+                                player.walking = True
+                                player.direction = -1
+                                player.player_acc = 1
+                                player.player_acc = volume ** (9/8) / 80 * min(2 * player.player_acc, 1)
+
+
+
+
 class Spritesheet:
     def __init__(self, filename):
         self.spritesheet = pg.image.load(filename).convert()
@@ -110,6 +184,8 @@ class Player(pg.sprite.Sprite):
 
         self.game = game
         self.pattern_checker = PatternChecker(game)
+        self.pattern_checker1 = PatternChecker2([60, 64, 67], 2)
+        self.pattern_checker2 = PatternChecker2([58])
 
         self.load_images()
         # print('self.standing_frames')
@@ -119,9 +195,9 @@ class Player(pg.sprite.Sprite):
 
         self.rect = self.image.get_rect()
 
-        self.rect.center = (40, HEIGHT - 100)
+        self.rect.center = (140, HEIGHT - 100)
 
-        self.pos = vec(40, HEIGHT -100)
+        self.pos = vec(140, HEIGHT -100)
         self.vel = vec(0, 0)
         self.acc = vec(0, 0)
 
@@ -253,7 +329,12 @@ class Player(pg.sprite.Sprite):
             self.game.player_moves += '->\n'
         # if keys[pg.K_SPACE]:
         #     self.jump()
-
+    def piano_update2(self):
+        if self.game.midi_input.poll():
+            midi_events = self.game.midi_input.read(15)
+            midi2events = midi.midis2events(midi_events, 1)
+            self.pattern_checker1.nombre(self, midi2events, movement_type='x')
+            self.pattern_checker2.nombre(self, midi2events, movement_type='jump')
     def piano_update(self):
         self.pattern_checker.add_note_to_user_pattern()
 
@@ -316,7 +397,7 @@ class Player(pg.sprite.Sprite):
         
         
         if self.game.playing_with_piano:
-            self.piano_update()
+            self.piano_update2()
         else:
             self.normal_update()
               

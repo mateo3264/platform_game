@@ -269,7 +269,7 @@ class Game:
                     self.fly_percent += randrange(self.configs['wings_range'][0], self.configs['wings_range'][1])
                 self.wings_sound.play()
 
-        while len(self.platforms) < 3:
+        while len(self.platforms) < 6:
             width = random.randrange(60, 120)
             typ = random.choice([0, 1])
             p = Platform(self, 
