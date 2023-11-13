@@ -126,7 +126,8 @@ class Game:
     def new(self):
         self.score = 0
         self.lives = 3
-        self.remaining_platforms = 4
+        self.remaining_platforms = 20
+        self.max_n_platforms = 6
         self.pow_spawn_pct = self.configs['max_pct_pows']
         self.last_score = 0
         self.all_sprites = pg.sprite.LayeredUpdates()
@@ -154,7 +155,7 @@ class Game:
 
         self.bgcolor = [0, 155, 155]
 
-        self.player_grav = 1
+        self.player_grav = .5
         
         pg.mixer.music.load(path.join(self.snd_dir, 'happytune.ogg'))
     
@@ -269,7 +270,7 @@ class Game:
                     self.fly_percent += randrange(self.configs['wings_range'][0], self.configs['wings_range'][1])
                 self.wings_sound.play()
 
-        while len(self.platforms) < 6:
+        while len(self.platforms) < self.max_n_platforms:
             width = random.randrange(60, 120)
             typ = random.choice([0, 1])
             p = Platform(self, 
@@ -427,6 +428,7 @@ class Game:
     def show_start_screen(self):
         pg.mixer.music.load(path.join(self.snd_dir, 'Yippee.ogg'))
         pg.mixer.music.play(-1)
+        pg.mixer.music.set_volume(0.1)
         if not self.playing_with_piano:
             self.screen.fill(BGCOLOR)
         else:

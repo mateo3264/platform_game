@@ -115,19 +115,16 @@ class PatternChecker2:
                             if note == self.pattern[0]:
                                 if player.game.remaining_platforms > 0:
                                     player.game.remaining_platforms -= 1  
-                                    Platform(player.game, 20, HEIGHT // 2, 0) 
+                                    Platform(player.game, 20, HEIGHT - 20, 0) 
                             if note == self.pattern[1]:
                                 if player.game.remaining_platforms > 0:
                                     player.game.remaining_platforms -= 1  
-                                    Platform(player.game, WIDTH // 2, 150, 0) 
+                                    Platform(player.game, WIDTH // 2, HEIGHT - 20, 0) 
                             if note == self.pattern[2]:
                                 if player.game.remaining_platforms > 0:
                                     player.game.remaining_platforms -= 1  
-                                    Platform(player.game, WIDTH - 100, HEIGHT // 2, 0) 
-                            if note == self.pattern[3]:
-                                if player.game.remaining_platforms > 0:
-                                    player.game.remaining_platforms -= 1  
-                                    Platform(player.game, WIDTH // 2, HEIGHT - 100, 0) 
+                                    Platform(player.game, WIDTH - 100, HEIGHT - 20, 0) 
+                            
                     else:
                         if volume != 0:
                             if timestamp - self.last_timestamp < self.interval_between_notes:
@@ -213,7 +210,7 @@ class Player(pg.sprite.Sprite):
         self.pattern_checker = PatternChecker(game)
         self.pattern_checker1 = PatternChecker2([60, 64, 67], 2)
         self.pattern_checker2 = PatternChecker2([51, 55, 58])
-        self.pattern_checker3 = PatternChecker2([72, 74, 76, 78])
+        self.pattern_checker3 = PatternChecker2([72, 74, 76])
 
         self.load_images()
         # print('self.standing_frames')
