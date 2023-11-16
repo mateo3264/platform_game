@@ -128,7 +128,7 @@ class Game:
         self.lives = 3
         self.remaining_platforms = 20
         self.max_n_platforms = 6
-        self.pow_spawn_pct = self.configs['max_pct_pows']
+        self.pow_spawn_pct = 0#self.configs['max_pct_pows']
         self.last_score = 0
         self.all_sprites = pg.sprite.LayeredUpdates()
         self.platforms = pg.sprite.Group()

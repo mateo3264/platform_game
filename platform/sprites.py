@@ -95,7 +95,11 @@ class PatternChecker2:
         
         self.curr_idx = len(self.pattern) - 1
 
-        self.last_timestamp = 0
+        self.max_idx = len(self.pattern) - 1
+
+        self.last_timestamp = None
+
+        self.last_note = None
 
         self.interval_between_notes = 500
         self.chord = []
@@ -109,7 +113,8 @@ class PatternChecker2:
                     
                     if movement_type == 'jump':
                         if note in self.pattern:
-                            self.chord.append((note, timestamp))
+                            if volume != 0:
+                                self.chord.append((note, timestamp))
                     elif movement_type == 'add-platform':
                         if volume != 0:
                             if note == self.pattern[0]:
@@ -127,55 +132,75 @@ class PatternChecker2:
                             
                     else:
                         if volume != 0:
-                            if timestamp - self.last_timestamp < self.interval_between_notes:
-                                if note == self.pattern[(self.curr_idx + 1) % len(self.pattern)]:
-                                    self.last_timestamp = timestamp
-                                    
-                                    
-                                    if movement_type == 'x':
-                                        #rect.centerx += volume // 2
-                                        self.curr_idx = (self.curr_idx + 1) % len(self.pattern)
-                                        player.walking = True
-                                        player.direction = 1
-                                        player.player_acc = 1
-                                        player.player_acc = volume ** (9/8) / 80 * min(2 * player.player_acc, 1)
-
-                                    # elif movement_type == 'jump':
-                                    #     print('JUMP')
-                                    #     player.jump()
-                                        #rect.centery += volume // 2
-                                elif note == self.pattern[(self.curr_idx - 1) % len(self.pattern)]:
-                                    self.last_timestamp = timestamp
-                                    #print(note, volume, timestamp)
-                                    if movement_type == 'x':
-                                        self.curr_idx = (self.curr_idx - 1) % len(self.pattern)
-                                        player.walking = True
-                                        player.direction = -1
-                                        player.player_acc = 1
-                                        player.player_acc = volume ** (9/8) / 80 * min(2 * player.player_acc, 1)
-                                    # elif movement_type == 'y':
-                                    #     rect.centery -= volume // 2
-
-                            
-                            else:
-                                if note == self.pattern[0]:
-                                    # if movement_type == 'jump':
-                                    #     print('JUMP')
-                                    #     player.jump() 
-                                    # else:   
-                                    self.last_timestamp = timestamp
-                                    self.curr_idx = (self.curr_idx + 1) % len(self.pattern)
-                                    player.walking = True
+                            if self.last_timestamp is None \
+                                    or timestamp - self.last_timestamp < self.interval_between_notes:
+                                
+                                if note == self.pattern[0] and self.last_note is None:
+                                    self.curr_idx = 1#(self.curr_idx + 1) % len(self.pattern)
                                     player.direction = 1
-                                    player.player_acc = 1
-                                    player.player_acc = volume ** (9/8) / 80 * min(2 * player.player_acc, 1)
-                                elif note == self.pattern[-1]:
+                                    print('note: ', note)
                                     self.last_timestamp = timestamp
-                                    self.curr_idx = (self.curr_idx - 1) % len(self.pattern)
-                                    player.walking = True
+                                    self.last_note = note
+                                elif note == self.pattern[-1] and self.last_note is None:
+                                    self.curr_idx = self.max_idx - 1
                                     player.direction = -1
+                                    print('note: ', note)
+                                    self.last_timestamp = timestamp
+                                    self.last_note = note
+                                
+                                elif note == self.pattern[self.curr_idx] \
+                                        and self.last_note == self.pattern[self.curr_idx - 1]:
+                                    if self.curr_idx < self.max_idx:
+                                        self.curr_idx = (self.curr_idx + 1) % len(self.pattern)
+                                        self.last_note = note
+                                    else:
+                                        self.curr_idx = 0
+                                        self.last_note = None
+                                    print('note: ', note)
+                                    player.direction = 1
+                                    self.last_timestamp = timestamp
+                                    
+                                
+                                elif note == self.pattern[self.curr_idx] \
+                                        and self.last_note == self.pattern[self.curr_idx + 1]:
+                                    if self.curr_idx > 0:
+                                        self.curr_idx -= 1
+                                        self.last_note = note   
+                                    else:
+                                        self.curr_idx = 0
+                                        self.last_note = None
+                                
+                                    player.direction = -1
+                                    self.last_timestamp = timestamp
+                                
+                                else:
+                                    player.direction = 0                                
+                                    
+                                    
+                                if movement_type == 'x':
+                                        #rect.centerx += volume // 2
+                                        
+                                    player.walking = True
+                                        
                                     player.player_acc = 1
                                     player.player_acc = volume ** (9/8) / 80 * min(2 * player.player_acc, 1)
+
+                                    
+
+                        
+                        else:
+                            if self.last_timestamp is None:
+                                if timestamp  >= self.interval_between_notes:
+                                    self.curr_idx = self.max_idx
+                                    self.last_note = None
+                                    self.last_timestamp = timestamp
+                            else:
+                                if timestamp - self.last_timestamp >= self.interval_between_notes:
+                                    self.curr_idx = self.max_idx
+                                    self.last_note = None
+                                    self.last_timestamp = timestamp
+                            
+
                 if len(self.chord) >= len(self.pattern):
                     timestamp_range = self.chord[-1][1] - self.chord[0][1]
                     if set([n for n, t in self.chord]) == set(self.pattern) and timestamp_range < 200:
@@ -208,7 +233,7 @@ class Player(pg.sprite.Sprite):
 
         self.game = game
         self.pattern_checker = PatternChecker(game)
-        self.pattern_checker1 = PatternChecker2([60, 64, 67], 2)
+        self.pattern_checker1 = PatternChecker2([60, 62, 64, 65, 67], 2)
         self.pattern_checker2 = PatternChecker2([51, 55, 58])
         self.pattern_checker3 = PatternChecker2([72, 74, 76])
 
@@ -358,8 +383,8 @@ class Player(pg.sprite.Sprite):
         if self.game.midi_input.poll():
             midi_events = self.game.midi_input.read(15)
             midi2events = midi.midis2events(midi_events, 1)
-            self.pattern_checker1.nombre(self, midi2events, movement_type='x')
             self.pattern_checker2.nombre(self, midi2events, movement_type='jump')
+            self.pattern_checker1.nombre(self, midi2events, movement_type='x')
             self.pattern_checker3.nombre(self, midi2events, movement_type='add-platform')
     def piano_update(self):
         self.pattern_checker.add_note_to_user_pattern()
