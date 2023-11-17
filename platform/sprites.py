@@ -72,7 +72,7 @@ class PatternChecker:
             match = False
           
             user_pattern = [note[0] for note in user_pattern]
-            # print(user_pattern)
+            
             for j, pattern in enumerate(self.game.patterns):
                 
                 if user_pattern == pattern:
@@ -97,116 +97,169 @@ class PatternChecker2:
 
         self.max_idx = len(self.pattern) - 1
 
-        self.last_timestamp = None
+        self.last_timestamp = 0
 
         self.last_note = None
 
         self.interval_between_notes = 500
         self.chord = []
+        self.max_timestamp_chord_interval = 250
 
-    def nombre(self, player, midi2events, movement_type='x'):
+        
+
+    def nombre(self, player, midi2events, type='chord'):
                 
+                note_idx = None
+                direction = None
+                vol = None
+                same_chord = False
                 for midi_event in midi2events:
                     note = midi_event.data1
                     volume = midi_event.data2
                     timestamp = midi_event.timestamp
                     
-                    if movement_type == 'jump':
-                        if note in self.pattern:
-                            if volume != 0:
+                    if volume != 0:
+                        if type == 'chord':
+                            
+                            if note in self.pattern:
+                                
                                 self.chord.append((note, timestamp))
-                    elif movement_type == 'add-platform':
-                        if volume != 0:
+                            if len(self.chord) >= len(self.pattern):
+                                timestamp_range = self.chord[-1][1] - self.chord[0][1]
+                                if set([n for n, t in self.chord]) == set(self.pattern) and timestamp_range < self.max_timestamp_chord_interval:
+                                    same_chord = True
+                        
+                                self.chord = []
+                                
+                            
+                        elif type == 'one-note':
+                            
                             if note == self.pattern[0]:
                                 if player.game.remaining_platforms > 0:
-                                    player.game.remaining_platforms -= 1  
-                                    Platform(player.game, 20, HEIGHT - 20, 0) 
+                                    # player.game.remaining_platforms -= 1  
+                                    # Platform(player.game, 20, HEIGHT - 20, 0)
+                                    note_idx = 0 
                             if note == self.pattern[1]:
                                 if player.game.remaining_platforms > 0:
-                                    player.game.remaining_platforms -= 1  
-                                    Platform(player.game, WIDTH // 2, HEIGHT - 20, 0) 
+                                    # player.game.remaining_platforms -= 1  
+                                    # Platform(player.game, WIDTH // 2, HEIGHT - 20, 0) 
+                                    note_idx = 1
                             if note == self.pattern[2]:
                                 if player.game.remaining_platforms > 0:
-                                    player.game.remaining_platforms -= 1  
-                                    Platform(player.game, WIDTH - 100, HEIGHT - 20, 0) 
+                                    # player.game.remaining_platforms -= 1  
+                                    # Platform(player.game, WIDTH - 100, HEIGHT - 20, 0) 
+                                    note_idx = 2
                             
-                    else:
-                        if volume != 0:
-                            if self.last_timestamp is None \
-                                    or timestamp - self.last_timestamp < self.interval_between_notes:
-                                
-                                if note == self.pattern[0] and self.last_note is None:
-                                    self.curr_idx = 1#(self.curr_idx + 1) % len(self.pattern)
-                                    player.direction = 1
-                                    print('note: ', note)
-                                    self.last_timestamp = timestamp
-                                    self.last_note = note
-                                elif note == self.pattern[-1] and self.last_note is None:
-                                    self.curr_idx = self.max_idx - 1
-                                    player.direction = -1
-                                    print('note: ', note)
-                                    self.last_timestamp = timestamp
-                                    self.last_note = note
-                                
-                                elif note == self.pattern[self.curr_idx] \
-                                        and self.last_note == self.pattern[self.curr_idx - 1]:
-                                    if self.curr_idx < self.max_idx:
-                                        self.curr_idx = (self.curr_idx + 1) % len(self.pattern)
+                            
+                            
+                        else:
+                            
+                            # if self.last_timestamp is None:
+                                if timestamp - self.last_timestamp < self.interval_between_notes \
+                                        or timestamp - self.last_timestamp > self.interval_between_notes \
+                                        and self.last_note is None:
+                                    
+                                    if note == self.pattern[0] and self.last_note is None:
+                                        self.curr_idx = 1#(self.curr_idx + 1) % len(self.pattern)
+                                        # player.direction = 1
+                                        
+                                        direction = 'right'
+                                        vol = volume
+                                        self.last_timestamp = timestamp
                                         self.last_note = note
-                                    else:
-                                        self.curr_idx = 0
-                                        self.last_note = None
-                                    print('note: ', note)
-                                    player.direction = 1
+                                    elif note == self.pattern[-1] and self.last_note is None:
+                                        self.curr_idx = self.max_idx - 1
+                                        
+                                        # player.direction = -1
+                                        direction = 'left'
+                                        vol = volume
+                                        self.last_timestamp = timestamp
+                                        self.last_note = note
+                                    
+                                    elif note == self.pattern[self.curr_idx] \
+                                            and self.last_note == self.pattern[self.curr_idx - 1]:
+                                        if self.curr_idx < self.max_idx:
+                                            self.curr_idx = (self.curr_idx + 1) % len(self.pattern)
+                                            self.last_note = note
+                                        else:
+                                            self.curr_idx = 0
+                                            self.last_note = None
+                                            
+                                        
+                                        # player.direction = 1
+                                        direction = 'right'
+                                        vol = volume
+                                        self.last_timestamp = timestamp
+                                        
+                                    
+                                    elif note == self.pattern[self.curr_idx] \
+                                            and self.last_note == self.pattern[self.curr_idx + 1]:
+                                        if self.curr_idx > 0:
+                                            self.curr_idx -= 1
+                                            self.last_note = note   
+                                        else:
+                                            self.curr_idx = 0
+                                            self.last_note = None
+                                        
+                                        # player.direction = -1
+                                        direction = 'left'
+                                        vol = volume
+                                        self.last_timestamp = timestamp
+                    else:
+                        if type != 'chord' and type != 'one-note':
+                                
+                                if timestamp - self.last_timestamp > self.interval_between_notes \
+                                        and self.last_note is not None:
+                                    
+                                    self.curr_idx = 0
+                                    self.last_note = None
                                     self.last_timestamp = timestamp
-                                    
+                                # elif timestamp - self.last_timestamp > self.interval_between_notes \
+                                #         and self.last_note is None:
+                                #     self.last_timestamp = timestamp
+                            # else:
+                            #     self.last_timestamp = timestamp
                                 
-                                elif note == self.pattern[self.curr_idx] \
-                                        and self.last_note == self.pattern[self.curr_idx + 1]:
-                                    if self.curr_idx > 0:
-                                        self.curr_idx -= 1
-                                        self.last_note = note   
-                                    else:
-                                        self.curr_idx = 0
-                                        self.last_note = None
+                                    #player.direction = 0                                
                                 
-                                    player.direction = -1
-                                    self.last_timestamp = timestamp
                                 
-                                else:
-                                    player.direction = 0                                
                                     
                                     
-                                if movement_type == 'x':
+                                # if type == 'x':
                                         #rect.centerx += volume // 2
                                         
-                                    player.walking = True
+                                    # player.walking = True
                                         
-                                    player.player_acc = 1
-                                    player.player_acc = volume ** (9/8) / 80 * min(2 * player.player_acc, 1)
+                                    # player.player_acc = 1
+                                    # player.player_acc = volume ** (9/8) / 80 * min(2 * player.player_acc, 1)
 
                                     
 
+                        # if volume == 0:    
                         
-                        else:
-                            if self.last_timestamp is None:
-                                if timestamp  >= self.interval_between_notes:
-                                    self.curr_idx = self.max_idx
-                                    self.last_note = None
-                                    self.last_timestamp = timestamp
-                            else:
-                                if timestamp - self.last_timestamp >= self.interval_between_notes:
-                                    self.curr_idx = self.max_idx
-                                    self.last_note = None
-                                    self.last_timestamp = timestamp
-                            
+                        #     if self.last_timestamp is None:
+                        #         if timestamp  >= self.interval_between_notes:
+                        #             self.curr_idx = self.max_idx
+                        #             self.last_note = None
+                        #             self.last_timestamp = timestamp
+                        #     else:
+                        #         if timestamp - self.last_timestamp >= self.interval_between_notes:
+                        #             self.curr_idx = self.max_idx
+                        #             self.last_note = None
+                        #             self.last_timestamp = timestamp
+                
+                if type == 'chord':
+                    return same_chord
+                elif type == 'one-note':
+                    return note_idx
+                if vol is not None:
+                    return direction, vol
+                else:
+                    return direction, volume 
+                
+                      
 
-                if len(self.chord) >= len(self.pattern):
-                    timestamp_range = self.chord[-1][1] - self.chord[0][1]
-                    if set([n for n, t in self.chord]) == set(self.pattern) and timestamp_range < 200:
-                        
-                        player.jump()
-                    self.chord = []
+                
 
 
 class Spritesheet:
@@ -233,13 +286,12 @@ class Player(pg.sprite.Sprite):
 
         self.game = game
         self.pattern_checker = PatternChecker(game)
-        self.pattern_checker1 = PatternChecker2([60, 62, 64, 65, 67], 2)
+        self.pattern_checker1 = PatternChecker2([60, 64, 68], 2)
         self.pattern_checker2 = PatternChecker2([51, 55, 58])
         self.pattern_checker3 = PatternChecker2([72, 74, 76])
 
         self.load_images()
-        # print('self.standing_frames')
-        # print(self.standing_frames)
+
         self.image = self.standing_frames[0]
         
 
@@ -254,7 +306,7 @@ class Player(pg.sprite.Sprite):
 
         self.player_acc = 1
 
-        self.player_friction = -.12
+        self.player_friction = -.06
 
         
         self.flying = False
@@ -383,9 +435,28 @@ class Player(pg.sprite.Sprite):
         if self.game.midi_input.poll():
             midi_events = self.game.midi_input.read(15)
             midi2events = midi.midis2events(midi_events, 1)
-            self.pattern_checker2.nombre(self, midi2events, movement_type='jump')
-            self.pattern_checker1.nombre(self, midi2events, movement_type='x')
-            self.pattern_checker3.nombre(self, midi2events, movement_type='add-platform')
+            jump = self.pattern_checker2.nombre(self, midi2events, type='chord')
+            if jump:
+                self.jump()
+            
+            dir, volume = self.pattern_checker1.nombre(self, midi2events, type='x')
+            if dir == 'left':
+                self.direction = -1
+                self.walking = True
+            elif dir == 'right':
+                self.direction = 1
+                self.walking = True
+                                        
+            self.player_acc = 1
+            self.player_acc = volume ** (11/8) / 80 * min(2 * self.player_acc, 1)
+
+            note_pattern_idx = self.pattern_checker3.nombre(self, midi2events, type='one-note')
+
+            for i in range(len(self.pattern_checker3.pattern)):
+                if note_pattern_idx == i:
+                    self.game.remaining_platforms -= 1  
+                    Platform(self.game, 20 + i * 200, HEIGHT - 50, 0)
+
     def piano_update(self):
         self.pattern_checker.add_note_to_user_pattern()
 
@@ -400,10 +471,7 @@ class Player(pg.sprite.Sprite):
                     self.direction = 1
                     self.player_acc = 1
                     self.player_acc = min(120 * self.player_acc / self.pattern_checker.total_time_of_running_pattern, 3)
-                    print('self.player_acc')
-                    print(self.player_acc)
-                    print('self.pattern_checker.total_time_of_running_pattern')
-                    print(self.pattern_checker.total_time_of_running_pattern)
+
                     self.game.player_moves += '->\n'
                     
                 elif i == 1:
@@ -415,10 +483,7 @@ class Player(pg.sprite.Sprite):
                     self.direction = -1
                     self.player_acc = 1
                     self.player_acc = min(120 * self.player_acc / self.pattern_checker.total_time_of_running_pattern, 3)
-                    print('self.player_acc')
-                    print(self.player_acc)
-                    print('self.pattern_checker.total_time_of_running_pattern')
-                    print(self.pattern_checker.total_time_of_running_pattern)
+
                     self.game.player_moves += '<-\n'
                     
                     
@@ -431,20 +496,13 @@ class Player(pg.sprite.Sprite):
     def update(self):
 
         self.animate()
-        
-        # if not self.flying:
-        #     if self.game.fly_percent < 100:
-        #         self.game.fly_percent += 1
 
-        # print('NORMAL')
-        # print(self.vel.x)
-        #doesn't allow to slide forever
         if abs(self.direction) < .01:
             self.direction = 0
             self.walking = False
         #reduces velocity by reducing factor multiplying acceleration
-        self.direction *= .9 
-        self.acc  = vec(0, self.game.player_grav)
+        self.direction *= .9
+        self.acc  = vec(self.player_acc, self.game.player_grav)
         
         
         if self.game.playing_with_piano:
