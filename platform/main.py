@@ -12,6 +12,8 @@ from itertools import chain
 import numpy as np
 
 
+
+
 class Game:
     def __init__(self, configs):
         
@@ -28,6 +30,14 @@ class Game:
             self.playing_with_piano = True
         except:
             self.playing_with_piano = False 
+
+        self.midi_output = midi.Output(0)
+
+        random_instrument = random.randrange(100)
+        print('random instrument:', random_instrument)
+        self.midi_output.set_instrument(random_instrument)
+
+
 
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
         pg.display.set_caption(TITLE)
@@ -156,6 +166,15 @@ class Game:
         self.bgcolor = [0, 155, 155]
 
         self.player_grav = .5
+
+
+        self.player_text = False
+
+        self.factor_for_change_of_scale = 1
+        self.play_notes = False
+        self.random_scale_idx = None
+
+        self.last_chord_attack = 0
         
         pg.mixer.music.load(path.join(self.snd_dir, 'happytune.ogg'))
     
@@ -182,7 +201,7 @@ class Game:
         audio_data = self.stream.read(AUDIO_CHUNK_SIZE)
         audio_array = np.frombuffer(audio_data, dtype=np.int16)
 
-        if max(audio_array) > 10000:
+        if max(audio_array) > 100000:
             
         
             self.player.fly()
@@ -294,6 +313,9 @@ class Game:
                 
             if self.lives == 0:
                 self.playing = False
+                self.midi_output.note_off(CHORD_PROGRESSION[self.random_scale_idx][0], 0)
+                self.midi_output.note_off(CHORD_PROGRESSION[self.random_scale_idx][1], 0)
+                self.midi_output.note_off(CHORD_PROGRESSION[self.random_scale_idx][2], 0)
 
         if self.score > 500:
             if now - self.wind_spawn_timer > 5000:
@@ -351,6 +373,41 @@ class Game:
                 if self.player.player_friction > -.05:
                     self.player.player_friction = -.05
 
+        if self.play_notes:  
+            #print('play') 
+            self.random_scale_idx = random.randrange(len(CHORD_PROGRESSION))
+            self.midi_output.note_on(CHORD_PROGRESSION[self.random_scale_idx][0], 100)
+            self.midi_output.note_on(CHORD_PROGRESSION[self.random_scale_idx][1], 100)
+            self.midi_output.note_on(CHORD_PROGRESSION[self.random_scale_idx][2], 100)
+            self.play_notes = False
+            self.last_chord_attack = pg.time.get_ticks()
+
+            self.player.pattern_checker_arpegios.pattern = CHORD_PROGRESSION[self.random_scale_idx]
+            self.player.pattern_checker_jump.pattern = [note - 12 for note in CHORD_PROGRESSION[self.random_scale_idx]]
+            
+            
+        if not self.play_notes and self.random_scale_idx is not None:
+            if pg.time.get_ticks() - self.last_chord_attack > 2000:
+                self.last_chord_attack = pg.time.get_ticks()
+                self.midi_output.note_off(CHORD_PROGRESSION[self.random_scale_idx][0], 0)
+                self.midi_output.note_off(CHORD_PROGRESSION[self.random_scale_idx][1], 0)
+                self.midi_output.note_off(CHORD_PROGRESSION[self.random_scale_idx][2], 0)
+                self.random_scale_idx = None
+                
+
+        if self.score % (50 * self.factor_for_change_of_scale) == 0 and self.score != 0:
+            print('cuando', self.factor_for_change_of_scale)
+            print('50 * self.factor_for_change_of_scale')
+            print(50 * self.factor_for_change_of_scale)
+            self.factor_for_change_of_scale += 1
+            self.play_notes = True
+
+
+        
+        
+                
+
+
         if self.player.rect.top > HEIGHT + 200:
             for sprite in self.all_sprites:
                 sprite.rect.y -= max(self.player.vel.y, 10)
@@ -370,6 +427,9 @@ class Game:
                     self.player.jump()
                     self.player_moves += '^\n'
                     self.player.is_jumping = True
+                if event.key == pg.K_h:
+                    self.player_text = not self.player_text
+                    
             if event.type == pg.KEYUP:
                 if event.key == pg.K_a:
                     if self.remaining_platforms > 0:
@@ -423,6 +483,13 @@ class Game:
         plat = pg.transform.scale(plat, (rect.width, rect.height))
         rect.center = WIDTH - 100, 25
         self.screen.blit(plat, rect.center)
+        
+        if self.player_text:
+            draw_speech_bubble(self.screen, 'Hi! My name is caffe 5', BLACK, WHITE, 
+                               (self.player.rect.right - 10, self.player.rect.top + 10), 20
+            )
+
+
         pg.display.flip()
 
     def show_start_screen(self):
