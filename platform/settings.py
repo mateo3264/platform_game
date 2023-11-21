@@ -69,13 +69,6 @@ AUDIO_CHANNELS = 1
 AUDIO_RATE = 44100
 
 
-CHORD_PROGRESSION = [
-    [62, 66, 70], #augmented
-    [62, 66, 69], #major
-    [64, 66, 69], #sus-2
-    [62, 67, 69], #sus-4
-    [62, 65, 69], #minor
-    [62, 65, 68], #diminished
-    ]
+
 
 

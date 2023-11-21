@@ -12,6 +12,15 @@ from itertools import chain
 import numpy as np
 
 
+def pattern_transposition(pattern, rango=0):
+    new_pattern = []
+    sign = random.choice([-1, 1])
+    transposition_interval = random.randrange(rango + 1)
+    for i, note in enumerate(pattern):
+        
+        new_pattern.append(sign * transposition_interval + pattern[i])
+    
+    return new_pattern
 
 
 class Game:
@@ -49,6 +58,14 @@ class Game:
         self.running = True
         
 
+        self.chord_progression = [
+                                    #[62, 66, 70], #augmented
+                                    #[62, 66, 69], #major
+                                    [64, 66, 69], #sus-2
+                                    [62, 67, 69], #sus-4
+                                    #[62, 65, 69], #minor
+                                    #[62, 65, 68], #diminished
+                                ]
         self.load_pattern_configurations()
 
         self.is_pattern_changed = False
@@ -174,7 +191,13 @@ class Game:
         self.play_notes = False
         self.random_scale_idx = None
 
+        self.chord_combinations = []
+
+        self.new_pattern = None
+
         self.last_chord_attack = 0
+
+        self.transposition_range = 0
         
         pg.mixer.music.load(path.join(self.snd_dir, 'happytune.ogg'))
     
@@ -313,9 +336,9 @@ class Game:
                 
             if self.lives == 0:
                 self.playing = False
-                self.midi_output.note_off(CHORD_PROGRESSION[self.random_scale_idx][0], 0)
-                self.midi_output.note_off(CHORD_PROGRESSION[self.random_scale_idx][1], 0)
-                self.midi_output.note_off(CHORD_PROGRESSION[self.random_scale_idx][2], 0)
+                self.midi_output.note_off(self.chord_progression[self.random_scale_idx][0], 0)
+                self.midi_output.note_off(self.chord_progression[self.random_scale_idx][1], 0)
+                self.midi_output.note_off(self.chord_progression[self.random_scale_idx][2], 0)
 
         if self.score > 500:
             if now - self.wind_spawn_timer > 5000:
@@ -375,23 +398,28 @@ class Game:
 
         if self.play_notes:  
             #print('play') 
-            self.random_scale_idx = random.randrange(len(CHORD_PROGRESSION))
-            self.midi_output.note_on(CHORD_PROGRESSION[self.random_scale_idx][0], 100)
-            self.midi_output.note_on(CHORD_PROGRESSION[self.random_scale_idx][1], 100)
-            self.midi_output.note_on(CHORD_PROGRESSION[self.random_scale_idx][2], 100)
-            self.play_notes = False
+            self.random_scale_idx = random.randrange(len(self.chord_progression))
+            
+            self.new_pattern = pattern_transposition(self.chord_progression[self.random_scale_idx], self.transposition_range)
+            print('self.new_pattern: ', self.new_pattern)
+            self.midi_output.note_on(self.new_pattern[0], 120)
+            self.midi_output.note_on(self.new_pattern[1], 120)
+            self.midi_output.note_on(self.new_pattern[2], 120)
             self.last_chord_attack = pg.time.get_ticks()
 
-            self.player.pattern_checker_arpegios.pattern = CHORD_PROGRESSION[self.random_scale_idx]
-            self.player.pattern_checker_jump.pattern = [note - 12 for note in CHORD_PROGRESSION[self.random_scale_idx]]
+            self.player.pattern_checker_arpegios.pattern = self.chord_progression[self.random_scale_idx]
+            self.player.pattern_checker_jump.pattern = [note - 12 for note in self.chord_progression[self.random_scale_idx]]
+            
+            self.play_notes = False
             
             
         if not self.play_notes and self.random_scale_idx is not None:
             if pg.time.get_ticks() - self.last_chord_attack > 2000:
                 self.last_chord_attack = pg.time.get_ticks()
-                self.midi_output.note_off(CHORD_PROGRESSION[self.random_scale_idx][0], 0)
-                self.midi_output.note_off(CHORD_PROGRESSION[self.random_scale_idx][1], 0)
-                self.midi_output.note_off(CHORD_PROGRESSION[self.random_scale_idx][2], 0)
+                print('new_pattern2: ', self.new_pattern)
+                self.midi_output.note_off(self.new_pattern[0], 0)
+                self.midi_output.note_off(self.new_pattern[1], 0)
+                self.midi_output.note_off(self.new_pattern[2], 0)
                 self.random_scale_idx = None
                 
 
@@ -399,7 +427,11 @@ class Game:
             print('cuando', self.factor_for_change_of_scale)
             print('50 * self.factor_for_change_of_scale')
             print(50 * self.factor_for_change_of_scale)
+            if self.factor_for_change_of_scale % 3 == 0:
+                self.transposition_range += 1
+                #self.chord_combinations.append(())
             self.factor_for_change_of_scale += 1
+            
             self.play_notes = True
 
 
