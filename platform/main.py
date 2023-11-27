@@ -1,15 +1,22 @@
-#4:27
+import sys
+
+sys.path.append('..')
+
 import pygame as pg
 import random
 from settings import *
 from sprites import *
+
+from utils.spritesheet import Spritesheet
+from utils.draw_text import draw_image_bubble
+from utils.music_note_creation import create_seq_notes
 from os import path
-import sys
 import pygame.midi as midi
 import datetime 
 from send_email import *
 from itertools import chain
 import numpy as np
+
 
 
 def pattern_transposition(pattern, rango=0):
@@ -109,6 +116,9 @@ class Game:
             input=True,
             frames_per_buffer=AUDIO_CHUNK_SIZE
         )
+
+        
+
     def load_data(self):
         self.load_audio_data()
         if hasattr(sys, '_MEIPASS'):
@@ -224,9 +234,8 @@ class Game:
         audio_data = self.stream.read(AUDIO_CHUNK_SIZE)
         audio_array = np.frombuffer(audio_data, dtype=np.int16)
 
-        if max(audio_array) > 100000:
-            
-        
+        if max(audio_array) > 10000:
+                
             self.player.fly()
         else:
             self.player.flying = False
@@ -521,6 +530,7 @@ class Game:
                                (self.player.rect.right - 10, self.player.rect.top + 10), 20
             )
 
+        draw_image_bubble(self.screen, (self.player.rect.right - 10, self.player.rect.top + 10))
 
         pg.display.flip()
 

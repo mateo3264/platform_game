@@ -5,7 +5,7 @@ from random import choice, randrange
 import math 
 import sys
 
-sys.path.append('C:\\Users\\chave\\Estudio\\quote_mis_quote_proyectos\\pygame_pruebas')
+#sys.path.append('C:\\Users\\chave\\Estudio\\quote_mis_quote_proyectos\\pygame_pruebas')
 
 
 
@@ -105,15 +105,6 @@ class PatternChecker:
                 
 
 
-class Spritesheet:
-    def __init__(self, filename):
-        self.spritesheet = pg.image.load(filename).convert()
-    
-    def get_image(self, x, y, width, height):
-        image = pg.Surface((width, height))
-        image.blit(self.spritesheet, (0, 0), (x, y, width, height))
-        image = pg.transform.scale(image, (width // 2, height // 2))
-        return image
 
 
 class Player(pg.sprite.Sprite):

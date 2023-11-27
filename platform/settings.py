@@ -55,10 +55,20 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
+CYAN = (0, 255, 255)
 LIGHTBLUE = (0, 155, 155)
 BGCOLOR = LIGHTBLUE
 CAFE5_PURPLE = (255, 0, 255)
 DARK_GRAY = (58, 67, 82)
+
+COLORS = [
+    WHITE,
+    BLACK,
+    RED,
+    YELLOW,
+    CYAN,
+    GREEN
+]
 
 
 TITLE = "CAFE 5"
