@@ -66,12 +66,12 @@ class Game:
         
 
         self.chord_progression = [
-                                    #[62, 66, 70], #augmented
-                                    #[62, 66, 69], #major
+                                    [62, 66, 70], #augmented
+                                    [62, 66, 69], #major
                                     [64, 66, 69], #sus-2
                                     [62, 67, 69], #sus-4
-                                    #[62, 65, 69], #minor
-                                    #[62, 65, 68], #diminished
+                                    [62, 65, 69], #minor
+                                    [62, 65, 68], #diminished
                                 ]
         self.load_pattern_configurations()
 
