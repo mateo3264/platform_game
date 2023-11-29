@@ -28,6 +28,7 @@ class PatternChecker2:
                 direction = None
                 vol = None
                 same_chord = False
+                notes = []
                 #print(midi2events)
                 # print('midi2events: ', midi2events)
                 #print(list(filter(lambda event : event.data2 != 0, midi2events)))
@@ -61,7 +62,9 @@ class PatternChecker2:
                                 if self.chord:
                                     if timestamp - self.chord[0][1] > self.max_timestamp_chord_interval:
                                         self.chord = []
-                                        
+                    elif type == 'check-note':
+                         if volume != 0:
+                              notes.append(note)
                             
                     elif type == 'one-note':
                             if just_once:
@@ -149,6 +152,8 @@ class PatternChecker2:
                     # if not same_chord:
                     #      self.chord =
                     return same_chord
+                elif type == 'check-note':
+                     return notes
                 elif type == 'one-note':
                     return self.note_idx
                 if vol is not None:
