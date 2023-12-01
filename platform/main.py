@@ -7,9 +7,9 @@ import random
 from settings import *
 from sprites import *
 
-from utils.spritesheet import Spritesheet
-from utils.draw_text import draw_image_bubble
-from utils.music_note_creation import create_seq_notes
+
+from midipatternspkg.draw_text import draw_image_bubble
+
 from os import path
 import pygame.midi as midi
 import datetime 
@@ -234,7 +234,7 @@ class Game:
         audio_data = self.stream.read(AUDIO_CHUNK_SIZE)
         audio_array = np.frombuffer(audio_data, dtype=np.int16)
 
-        if max(audio_array) > 10000:
+        if max(audio_array) > 100000:
                 
             self.player.fly()
         else:
@@ -530,7 +530,7 @@ class Game:
                                (self.player.rect.right - 10, self.player.rect.top + 10), 20
             )
 
-        draw_image_bubble(self.screen, (self.player.rect.right - 10, self.player.rect.top + 10))
+        #draw_image_bubble(self.screen, (self.player.rect.right - 10, self.player.rect.top + 10))
 
         pg.display.flip()
 

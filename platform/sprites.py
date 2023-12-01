@@ -9,8 +9,8 @@ import sys
 
 
 
-from utils.patterns import PatternChecker2
-from utils.draw_text import draw_speech_bubble
+from midipatternspkg.patterns import PatternChecker2
+from midipatternspkg.draw_text import draw_speech_bubble
 
 
 
@@ -18,7 +18,19 @@ from utils.draw_text import draw_speech_bubble
 
 vec = pg.math.Vector2
 
+
+
+class Spritesheet:
+    def __init__(self, filename):
+        self.spritesheet = pg.image.load(filename).convert()
     
+    def get_image(self, x, y, width, height):
+        image = pg.Surface((width, height))
+        image.blit(self.spritesheet, (0, 0), (x, y, width, height))
+        image = pg.transform.scale(image, (width // 2, height // 2))
+        return image
+
+
 
 class PatternChecker:
     def __init__(self, game):
