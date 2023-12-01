@@ -13,7 +13,7 @@ If you don't have a piano you can play it by using the left and right keys to mo
 ## Acknowledgements
 
  - [Awesome Visual Art by Kenney](https://www.kenney.nl/assets)
- - [Awesome Pygame Tutorials](https://kidscancode.org/)
+ - [Awesome Pygame Tutorials by Kids Can Code](https://kidscancode.org/)
 
 
 
